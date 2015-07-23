@@ -10,7 +10,7 @@ void PlaySource::run() {
 	for (auto& song : queue) {
 
 		//TEMP
-		printf("%s: %s (%s)", song.artist.name, song.name, song.genre.name);
+		printf("%s: %s (%s)", song.artist.name.c_str(), song.name.c_str(), song.genre.name.c_str());
 		// END TEMP
 
 		// Song finished
