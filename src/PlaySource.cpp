@@ -1,6 +1,7 @@
 #include "PlaySource.h"
 
-#include <stdlib.h>
+#include <thread>
+#include <chrono>
 
 void PlaySource::run() {
 
@@ -10,7 +11,8 @@ void PlaySource::run() {
 	for (auto& song : queue) {
 
 		//TEMP
-		printf("%s: %s (%s)", song.artist.name.c_str(), song.name.c_str(), song.genre.name.c_str());
+		printf("Playing: %s: %s (%s)\n", song.artist.name.c_str(), song.name.c_str(), song.genre.name.c_str());
+        std::this_thread::sleep_for(std::chrono::seconds(5));
 		// END TEMP
 
 		// Song finished
