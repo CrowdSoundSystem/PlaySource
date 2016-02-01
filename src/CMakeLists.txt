@@ -9,5 +9,6 @@ file(GLOB_RECURSE playsource_srcs
 
 add_library(playsource STATIC ${playsource_srcs})
 
+set_property(TARGET playsource PROPERTY CXX_STANDARD 11)
 set_target_properties(playsource PROPERTIES PREFIX "")
 install(TARGETS playsource DESTINATION bin)
