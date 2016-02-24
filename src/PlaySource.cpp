@@ -8,7 +8,11 @@ void PlaySource::run() {
 	skrillex::ResultSet<skrillex::Song> queue;
 	m_db->getQueue(queue);
 
+    int count = 0;
 	for (auto& song : queue) {
+        if (count++ > 0) {
+            return;
+        }
 
 		//TEMP
 		printf("Playing: %s: %s (%s)\n", song.artist.name.c_str(), song.name.c_str(), song.genre.name.c_str());
