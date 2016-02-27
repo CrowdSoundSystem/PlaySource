@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+option go_package = "playsource";
+
+package PlaySource;
+
+service PlaySource {
+    // QueueSong attempts to queue a song for the playsource service to play.
+    // QueueSongResponse indicates whether or not the song was queued.
+    rpc QueueSong(stream QueueSongRequest) returns (stream QueueSongResponse) {}
+
+    // GetPlaying returns the currently playing song (if any).
+    rpc GetPlaying(GetPlayingRequest) returns (GetPlayingResponse) {}
+
+    // GetPlayHistory returns songs that have been played since the service has been running.
+    rpc GetPlayHistory(GetPlayHistoryRequest) returns (stream GetPlayHistoryResponse) {}
+}
+
+message Song {
+    // Crowdsound song id.
+    int32 song_id = 1;
+
+    // Song name.
+    string name = 2;
+
+    // Song artists.
+    repeated string artists = 3;
+}
+
+message QueueSongRequest {
+    Song song = 1;
+}
+
+message QueueSongResponse {
+    // The Crowdsound song in question.
+    int32 song_id = 1;
+
+    bool queued = 2;
+
+    // Whether or not a song was found. Will always be true if queued == true.
+    bool found = 3;
+
+    // Whether or not the song was finished.
+    bool finished = 4;
+}
+
+message GetPlayingRequest {
+}
+
+message GetPlayingResponse {
+    Song song = 1;
+}
+
+message GetPlayHistoryRequest {
+}
+
+message GetPlayHistoryResponse {
+    Song song = 1;
+}
