@@ -89,7 +89,7 @@ func (c *Client) request(method string, params interface{}) (response *modipyRes
 }
 
 type SearchArgs struct {
-	Any    string   `json:"track_name,omitempty"`
+	Name   string   `json:"track_name,omitempty"`
 	Artist []string `json:"artist,omitempty"`
 	Genre  []string `json:"genre,omitempty"`
 }

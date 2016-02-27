@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"github.com/crowdsoundsystem/playsource/pkg/playsource"
 	"github.com/crowdsoundsystem/playsource/pkg/server"
@@ -33,6 +34,7 @@ func main() {
 		server.NewMopidyServer(
 			*mopidyUrl,
 			*queueSize,
+			time.Duration(*pollInterval)*time.Second,
 		),
 	)
 
