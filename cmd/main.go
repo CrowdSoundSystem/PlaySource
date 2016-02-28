@@ -55,7 +55,6 @@ func main() {
 
 	// Try to play all the songs listed in the queue file using
 	// the proper protocol. Note: doesn't handle retries.
-	log.Println("Attempting to queue:", songs)
 	var inFlight int
 	for i := 0; i < len(songs); {
 		for inFlight < *queueSize {
@@ -78,7 +77,7 @@ func main() {
 
 		inFlight--
 		if inFlight < 0 {
-			log.Fatalf("Negative in flight requess")
+			log.Fatalf("Negative in flight requests")
 		}
 
 		if resp.Finished {

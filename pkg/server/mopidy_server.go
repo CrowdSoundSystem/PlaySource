@@ -18,9 +18,9 @@ import (
 type MopidyServer struct {
 	client *mopidy.Client
 
-	queueSize     int32
-	maxQueueSize  int
-	maxSongLength int
+	queueSize    int32
+	maxQueueSize int
+	pollInterval time.Duration
 
 	nowPlayingLock sync.Mutex
 	nowPlaying     playsource.Song
@@ -36,10 +36,11 @@ type MopidyServer struct {
 	master chan struct{}
 }
 
-func NewMopidyServer(url string, maxQueueSize int) *MopidyServer {
+func NewMopidyServer(url string, maxQueueSize int, pollInterval time.Duration) *MopidyServer {
 	s := &MopidyServer{
 		client:       mopidy.NewClient(url),
 		maxQueueSize: maxQueueSize,
+		pollInterval: pollInterval,
 		master:       make(chan struct{}, 1),
 	}
 
@@ -86,9 +87,8 @@ func (m *MopidyServer) QueueSong(stream playsource.Playsource_QueueSongServer) e
 	defer func() { m.master <- struct{}{} }()
 
 	atomic.StoreInt32(&m.queueSize, 0)
-	session, err := NewMopidySession(m.client, 2*m.maxQueueSize, 10*time.Second)
 	inbound := queueStream(stream)
-
+	session, err := NewMopidySession(m.client, 2*m.maxQueueSize, m.pollInterval)
 	if err != nil {
 		return err
 	}
@@ -99,8 +99,7 @@ func (m *MopidyServer) QueueSong(stream playsource.Playsource_QueueSongServer) e
 		select {
 		case req, ok := <-inbound:
 			if !ok {
-				// Inbound channel was closed, which means the stream
-				// was closed.
+				// Inbound channel was closed, which means the stream was closed.
 				return nil
 			}
 
@@ -121,8 +120,6 @@ func (m *MopidyServer) QueueSong(stream playsource.Playsource_QueueSongServer) e
 			for _, r := range searchResults {
 				tracks = append(tracks, r.Tracks...)
 			}
-
-			log.Printf("Found results for %v: %v", args, tracks)
 
 			// Did we finy any results?
 			if len(tracks) == 0 {
@@ -178,7 +175,7 @@ func (m *MopidyServer) QueueSong(stream playsource.Playsource_QueueSongServer) e
 				continue
 			}
 
-			log.Printf("Queuing: ", tracks[0])
+			log.Println("Queuing:", req.Song)
 			err = session.QueueSong(SongTrackPair{
 				Song:  *req.Song,
 				Track: tracks[0],

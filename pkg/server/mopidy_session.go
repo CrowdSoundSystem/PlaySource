@@ -43,10 +43,11 @@ func NewMopidySession(client *mopidy.Client, queueSize int, pollInterval time.Du
 	}
 
 	session := &MopidySession{
-		client:   client,
-		shutdown: make(chan struct{}),
-		queue:    make(chan SongTrackPair, queueSize),
-		finished: make(chan SongTrackPair, queueSize),
+		client:       client,
+		pollInterval: pollInterval,
+		shutdown:     make(chan struct{}),
+		queue:        make(chan SongTrackPair, queueSize),
+		finished:     make(chan SongTrackPair, queueSize),
 	}
 
 	go session.monitor(len(history))
