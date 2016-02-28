@@ -79,7 +79,7 @@ func (t *TestServer) Close() error {
 	return nil
 }
 
-func (t *TestServer) QueueSong(stream playsource.PlaySource_QueueSongServer) error {
+func (t *TestServer) QueueSong(stream playsource.Playsource_QueueSongServer) error {
 	inbound := queueStream(stream)
 
 	for {
@@ -146,7 +146,7 @@ func (t *TestServer) GetPlaying(ctx context.Context, req *playsource.GetPlayingR
 	return &playsource.GetPlayingResponse{Song: &song}, nil
 }
 
-func (t *TestServer) GetPlayHistory(req *playsource.GetPlayHistoryRequest, stream playsource.PlaySource_GetPlayHistoryServer) error {
+func (t *TestServer) GetPlayHistory(req *playsource.GetPlayHistoryRequest, stream playsource.Playsource_GetPlayHistoryServer) error {
 	t.historyLock.Lock()
 	history := make([]playsource.Song, len(t.history))
 	copy(history, t.history)

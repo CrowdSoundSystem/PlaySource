@@ -28,7 +28,7 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer()
-	playsource.RegisterPlaySourceServer(
+	playsource.RegisterPlaysourceServer(
 		grpcServer,
 		server.NewMopidyServer(
 			*mopidyUrl,

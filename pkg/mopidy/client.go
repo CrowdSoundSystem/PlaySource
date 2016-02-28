@@ -89,9 +89,9 @@ func (c *Client) request(method string, params interface{}) (response *modipyRes
 }
 
 type SearchArgs struct {
-	Any    string   `json:"track_name,omitempty"`
-	Artist []string `json:"artist,omitempty"`
-	Genre  []string `json:"genre,omitempty"`
+	TrackName []string `json:"track_name,omitempty"`
+	Artist    []string `json:"artist,omitempty"`
+	Genre     []string `json:"genre,omitempty"`
 }
 
 type SearchResult struct {
@@ -202,7 +202,7 @@ func (c *Client) SetConsume(consume bool) error {
 	return err
 }
 
-func (c *Client) AddTracks(tracks []Track) error {
+func (c *Client) AddTracks(tracks []Track) (tracksAdded []Track, err error) {
 	params := struct {
 		URIs []string `json:"uris"`
 	}{URIs: make([]string, len(tracks))}
@@ -211,8 +211,16 @@ func (c *Client) AddTracks(tracks []Track) error {
 		params.URIs[i] = tracks[i].URI
 	}
 
-	_, err := c.request("core.tracklist.add", params)
-	return err
+	resp, err := c.request("core.tracklist.add", params)
+	if err != nil {
+		return tracksAdded, err
+	}
+
+	if err = json.Unmarshal(resp.Result, &tracksAdded); err != nil {
+		return tracksAdded, err
+	}
+
+	return tracksAdded, err
 }
 
 func (c *Client) ClearTracklist() error {

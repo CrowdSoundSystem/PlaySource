@@ -46,10 +46,11 @@ func NewMopidyServer(url string, maxQueueSize int) *MopidyServer {
 	// Initial lease
 	s.master <- struct{}{}
 
+	log.Println("created")
 	return s
 }
 
-func queueStream(stream playsource.PlaySource_QueueSongServer) <-chan playsource.QueueSongRequest {
+func queueStream(stream playsource.Playsource_QueueSongServer) <-chan playsource.QueueSongRequest {
 	inbound := make(chan playsource.QueueSongRequest)
 
 	go func() {
@@ -58,12 +59,14 @@ func queueStream(stream playsource.PlaySource_QueueSongServer) <-chan playsource
 		for {
 			req, err := stream.Recv()
 			if err == io.EOF {
+				log.Println("stream closed")
 				return
 			} else if err != nil {
 				log.Println(err)
 				return
 			}
 
+			log.Println("Received queue song:", req)
 			inbound <- *req
 		}
 	}()
@@ -71,7 +74,9 @@ func queueStream(stream playsource.PlaySource_QueueSongServer) <-chan playsource
 	return inbound
 }
 
-func (m *MopidyServer) QueueSong(stream playsource.PlaySource_QueueSongServer) error {
+func (m *MopidyServer) QueueSong(stream playsource.Playsource_QueueSongServer) error {
+	log.Println("Client connected")
+
 	select {
 	case <-m.master:
 	default:
@@ -81,13 +86,15 @@ func (m *MopidyServer) QueueSong(stream playsource.PlaySource_QueueSongServer) e
 	defer func() { m.master <- struct{}{} }()
 
 	atomic.StoreInt32(&m.queueSize, 0)
-	inbound := queueStream(stream)
 	session, err := NewMopidySession(m.client, 2*m.maxQueueSize, 10*time.Second)
+	inbound := queueStream(stream)
+
 	if err != nil {
 		return err
 	}
 	defer session.Close()
 
+	log.Println("Starting loop")
 	for {
 		select {
 		case req, ok := <-inbound:
@@ -99,8 +106,8 @@ func (m *MopidyServer) QueueSong(stream playsource.PlaySource_QueueSongServer) e
 
 			// Search for song
 			args := mopidy.SearchArgs{
-				Any:    req.Song.Name,
-				Artist: req.Song.Artists,
+				TrackName: []string{req.Song.Name},
+				Artist:    req.Song.Artists,
 			}
 
 			searchResults, err := m.client.Search(args)
@@ -114,6 +121,8 @@ func (m *MopidyServer) QueueSong(stream playsource.PlaySource_QueueSongServer) e
 			for _, r := range searchResults {
 				tracks = append(tracks, r.Tracks...)
 			}
+
+			log.Printf("Found results for %v: %v", args, tracks)
 
 			// Did we finy any results?
 			if len(tracks) == 0 {
@@ -133,6 +142,8 @@ func (m *MopidyServer) QueueSong(stream playsource.PlaySource_QueueSongServer) e
 
 			// Check server queue size.
 			if int(atomic.LoadInt32(&m.queueSize)) >= m.maxQueueSize {
+				log.Println("Internal queue size reached: ", atomic.LoadInt32(&m.queueSize))
+				atomic.AddInt32(&m.queueSize, -1)
 				err := stream.Send(&playsource.QueueSongResponse{
 					SongId: req.Song.SongId,
 					Queued: false,
@@ -147,10 +158,27 @@ func (m *MopidyServer) QueueSong(stream playsource.PlaySource_QueueSongServer) e
 			}
 
 			// Just take the first result?
-			if err := m.client.AddTracks(tracks[0:1]); err != nil {
+			tracksAdded, err := m.client.AddTracks(tracks[0:1])
+			if err != nil {
 				return err
 			}
 
+			if len(tracksAdded) == 0 {
+				err := stream.Send(&playsource.QueueSongResponse{
+					SongId: req.Song.SongId,
+					Queued: false,
+					Found:  false,
+				})
+				if err == io.EOF {
+					return nil
+				} else if err != nil {
+					return err
+				}
+
+				continue
+			}
+
+			log.Printf("Queuing: ", tracks[0])
 			err = session.QueueSong(SongTrackPair{
 				Song:  *req.Song,
 				Track: tracks[0],
@@ -207,7 +235,7 @@ func (m *MopidyServer) GetPlaying(ctx context.Context, req *playsource.GetPlayin
 	return &playsource.GetPlayingResponse{Song: &song}, nil
 }
 
-func (m *MopidyServer) GetPlayHistory(req *playsource.GetPlayHistoryRequest, stream playsource.PlaySource_GetPlayHistoryServer) error {
+func (m *MopidyServer) GetPlayHistory(req *playsource.GetPlayHistoryRequest, stream playsource.Playsource_GetPlayHistoryServer) error {
 	/*
 		m.historyLock.Lock()
 		history := make([]playsource.Song, len(m.history))
