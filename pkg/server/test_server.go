@@ -90,7 +90,7 @@ func (t *TestServer) QueueSong(stream playsource.Playsource_QueueSongServer) err
 			}
 
 			// Perform lookup immediately
-			if rand.Float64() < t.foundProbability {
+			if t.foundProbability < rand.Float64() {
 				err := stream.Send(&playsource.QueueSongResponse{
 					SongId: req.Song.SongId,
 					Queued: false,
