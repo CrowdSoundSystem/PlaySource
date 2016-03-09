@@ -138,6 +138,10 @@ func (t *TestServer) QueueSong(stream playsource.Playsource_QueueSongServer) err
 	}
 }
 
+func (t *TestServer) SkipSong(ctx context.Context, req *playsource.SkipSongRequest) (*playsource.SkipSongResponse, error) {
+	return &playsource.SkipSongResponse{}, nil
+}
+
 func (t *TestServer) GetPlaying(ctx context.Context, req *playsource.GetPlayingRequest) (*playsource.GetPlayingResponse, error) {
 	t.nowPlayingLock.Lock()
 	song := t.nowPlaying

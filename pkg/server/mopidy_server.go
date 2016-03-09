@@ -33,7 +33,8 @@ type MopidyServer struct {
 	// a value, they are considered master, and no other client can
 	// control the server (though they may query it). When master
 	// disconnects, they return their 'lease' to this channel
-	master chan struct{}
+	master   chan struct{}
+	skipSong chan struct{}
 }
 
 func NewMopidyServer(url string, maxQueueSize int, pollInterval time.Duration) *MopidyServer {
@@ -222,6 +223,15 @@ func (m *MopidyServer) QueueSong(stream playsource.Playsource_QueueSongServer) e
 		}
 	}
 	return nil
+}
+
+func (m *MopidyServer) SkipSong(ctx context.Context, req *playsource.SkipSongRequest) (*playsource.SkipSongResponse, error) {
+	err := m.client.Next()
+	if err != nil {
+		err = errf(codes.Internal, err.Error())
+	}
+
+	return &playsource.SkipSongResponse{}, err
 }
 
 func (m *MopidyServer) GetPlaying(ctx context.Context, req *playsource.GetPlayingRequest) (*playsource.GetPlayingResponse, error) {

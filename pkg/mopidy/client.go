@@ -132,6 +132,11 @@ func (c *Client) Stop() error {
 	return err
 }
 
+func (c *Client) Next() error {
+	_, err := c.request("core.playback.next", struct{}{})
+	return err
+}
+
 func (c *Client) CurrentState() (playState PlayState, err error) {
 	resp, err := c.request("core.playback.get_state", struct{}{})
 	if err != nil {
