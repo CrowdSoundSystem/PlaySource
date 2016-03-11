@@ -1,0 +1,8 @@
+[Unit]
+Description=Crowdsound Playsource Service
+
+[Service]
+ExecStart=$GOPATH/bin/playsource -config $HOME/.config/playsource/config.json
+
+[Install]
+WantedBy=default.target
