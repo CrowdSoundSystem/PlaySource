@@ -82,7 +82,7 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 
-	if *test {
+	if config.Test {
 		playsource.RegisterPlaysourceServer(
 			grpcServer,
 			server.NewTestServer(
