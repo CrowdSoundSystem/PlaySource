@@ -101,6 +101,7 @@ func (m *MopidyServer) QueueSong(stream playsource.Playsource_QueueSongServer) e
 		case req, ok := <-inbound:
 			if !ok {
 				// Inbound channel was closed, which means the stream was closed.
+				log.Println("Inbound channel closed")
 				return nil
 			}
 
@@ -111,9 +112,8 @@ func (m *MopidyServer) QueueSong(stream playsource.Playsource_QueueSongServer) e
 			}
 
 			searchResults, err := m.client.Search(args)
-			if err == io.EOF {
-				return nil
-			} else if err != nil {
+			if err != nil {
+				log.Println("Search error:", err)
 				return err
 			}
 
@@ -182,6 +182,7 @@ func (m *MopidyServer) QueueSong(stream playsource.Playsource_QueueSongServer) e
 				Track: tracks[0],
 			})
 			if err != nil {
+				log.Println("Error queueing song:", err)
 				return err
 			}
 
