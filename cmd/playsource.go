@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"time"
 
 	"github.com/crowdsoundsystem/playsource/pkg/playsource"
 	"github.com/crowdsoundsystem/playsource/pkg/server"
+	"github.com/crowdsoundsystem/playsource/pkg/systemd"
 
 	"google.golang.org/grpc"
 )
@@ -22,6 +24,7 @@ var (
 	queueSize    = flag.Int("queueSize", 3, "Anticipated client queue size")
 	pollInterval = flag.Int("pollInterval", 10, "Mopidy poll time in seconds")
 	test         = flag.Bool("test", false, "Whether or not to emulate a real server")
+	serviceMode  = flag.Bool("serviceMode", false, "Whether or not the playsource is being run as a systemd service")
 )
 
 type Config struct {
@@ -32,9 +35,7 @@ type Config struct {
 	Test         bool   `json:"test"`
 }
 
-func main() {
-	flag.Parse()
-
+func loadConfig() Config {
 	var config Config
 	if *configPath != "" {
 		f, err := os.Open(*configPath)
@@ -54,6 +55,25 @@ func main() {
 		config.PollInterval = *pollInterval
 		config.Test = *test
 	}
+
+	return config
+}
+
+func waitForMopidy(config Config) {
+	for {
+		_, err := http.Get(config.MopidyURL)
+		if err == nil {
+			return
+		}
+
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func main() {
+	flag.Parse()
+
+	config := loadConfig()
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%v", config.Port))
 	if err != nil {
@@ -82,6 +102,12 @@ func main() {
 		)
 	}
 
-	log.Println("Listenning on:", fmt.Sprintf("localhost:%v", config.Port))
+	if *serviceMode {
+		log.Println("Waiting for mopidy...")
+		waitForMopidy(config)
+		systemd.Ready()
+	}
+
+	log.Println("Listening on:", fmt.Sprintf("localhost:%v", config.Port))
 	grpcServer.Serve(lis)
 }

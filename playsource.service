@@ -2,7 +2,8 @@
 Description=Crowdsound Playsource Service
 
 [Service]
-ExecStart=$GOPATH/bin/playsource -config $HOME/.config/playsource/config.json
+ExecStart=/opt/playsource -serviceMode -config /etc/playsource/config.json
+Type=notify
 
 [Install]
 WantedBy=default.target
