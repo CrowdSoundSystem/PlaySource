@@ -87,8 +87,8 @@ func main() {
 			grpcServer,
 			server.NewTestServer(
 				config.QueueSize,
-				0.9,
-				5*time.Second,
+				1.1,
+				120*time.Second,
 			),
 		)
 	} else {
