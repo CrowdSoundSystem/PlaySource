@@ -5,6 +5,7 @@ After=mopidy.service
 
 [Service]
 ExecStart=/opt/crowdsound/playsource -serviceMode -config /etc/crowdsound/playsource_config.json
+TimeoutStartSec=infinity
 Type=notify
 
 [Install]
