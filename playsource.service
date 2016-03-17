@@ -1,10 +1,12 @@
 [Unit]
 Description=Crowdsound Playsource Service
+Requires=mopidy.service
+After=mopidy.service
 
 [Service]
-ExecStart=/opt/playsource -serviceMode -config /etc/playsource/config.json
+ExecStart=/opt/crowdsound/playsource -serviceMode -config /etc/crowdsound/playsource_config.json
 Type=notify
-After=mopidy
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
+
