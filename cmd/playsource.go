@@ -21,7 +21,7 @@ var (
 	configPath   = flag.String("config", "", "Configuration path")
 	mopidyUrl    = flag.String("mopidyUrl", "http://localhost:6680/mopidy/rpc", "Mopidy RPC endpoint")
 	port         = flag.Int("port", 50052, "Port to listen on")
-	queueSize    = flag.Int("queueSize", 3, "Anticipated client queue size")
+	queueSize    = flag.Int("queueSize", 200, "Anticipated client queue size")
 	pollInterval = flag.Int("pollInterval", 10, "Mopidy poll time in seconds")
 	test         = flag.Bool("test", false, "Whether or not to emulate a real server")
 	serviceMode  = flag.Bool("serviceMode", false, "Whether or not the playsource is being run as a systemd service")
