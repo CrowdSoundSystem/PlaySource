@@ -4,6 +4,7 @@ Description=Crowdsound Playsource Service
 [Service]
 ExecStart=/opt/playsource -serviceMode -config /etc/playsource/config.json
 Type=notify
+After=mopidy
 
 [Install]
 WantedBy=default.target
